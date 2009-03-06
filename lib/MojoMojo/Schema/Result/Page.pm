@@ -206,11 +206,39 @@ sub descendants {
     return $self->result_source->resultset->set_paths(@pages);
 }
 
-=item others_tags <user>
+=head2 between_nodes
 
-Return popular tags for this page used by other people than <user>.
+Given a move node and target parent node to move under.  Let's determine
+the nodes between the move and parent.  It's necessary to know these
+nodes so we can update their left and right numbers.
 
 =cut
+# This doesn't work yet...
+sub between_nodes {                                                                
+    my ($self, $target_parent_node)  = @_;                             
+                                                                                   
+    # check depth of target parent node and break into two cases                   
+    # - target parent node is orgin (lft = 1 or depth = 0, which are equivalent)   
+    # - targent parent node is not origin                                          
+    my (@pages) = $self->result_source->resultset->search(                         
+        {                                                                          
+            'ancestor.id' => $self->id,                                            
+            -or           => [                                                     
+                'ancestor.id' => \'=me.id',                                        
+                -and          => [                                                 
+                    'me.lft' => \"> $self->lft",                              
+                    'me.rgt' => \"< $target_parent_node->lft",                     
+                ]                                                                  
+            ],                                                                     
+        },                                                                         
+        {                                                                          
+            from     => 'page me, page ancestor',                                  
+            order_by => ['me.name']                                                
+        }                                                                          
+    );                                                                             
+    return $self->result_source->resultset->set_paths(@pages);
+}
+
 
 sub user_tags {
     my ( $self, $user ) = @_;
@@ -228,6 +256,12 @@ sub user_tags {
     );
     return @tags;
 }
+
+=item others_tags <user>
+
+Return popular tags for this page used by other people than <user>.
+
+=cut
 
 sub others_tags {
     my ( $self, $user ) = @_;
