@@ -177,7 +177,7 @@ sub recover_pass : Global {
             header => [
                 From    => $c->config->{system_mail},
                 To      => $user->login . ' <' . $user->email . '>',
-                Subject => 'Your new password on ' . $c->config->{name},
+                Subject => 'Your new password on ' .  $c->pref('name') || $c->config->{name} || "MojoMojo",
             ],
             body => $c->view('TT')->render( $c, 'mail/reset_password.tt' ),
         )
@@ -219,7 +219,7 @@ sub register : Global FormConfig {
     if ($c->pref('use_captcha')){
         my $captcha_lang= $c->session->{lang} || $c->pref('default_lang') || 'en' ;
         my $captcha=$form->element({ type=>'reCAPTCHA', name=>'captcha', recaptcha_options=>{ lang => $captcha_lang , theme=>'white' } });
-	$form->process;
+        $form->process;
     }
 
     $form->model->default_values($c->stash->{user});
@@ -406,7 +406,7 @@ sub do_editprofile : Global {
 
 =head1 AUTHOR
 
-David Naughton <naughton@cpan.org>, 
+David Naughton <naughton@cpan.org>,
 Marcus Ramberg <mramberg@cpan.org>
 
 =head1 LICENSE
